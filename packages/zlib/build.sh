@@ -4,7 +4,7 @@ set -e
 # Metadata
 MY_PKG_NAME="zlib"
 MY_PKG_DESCRIPTION="Compression library"
-MY_PKG_VERSION="1.2.11"  # Use the desired version
+MY_PKG_VERSION="1.3.1"  # Use the desired version
 MY_PKG_LICENSE="Zlib"
 MY_PKG_BUILD_IN_SRC=true
 
@@ -40,17 +40,17 @@ LD="$TOOLCHAIN/bin/$ABI-ld"
 
 # Download zlib source (or use a local copy)
 ZLIB_SRC_DIR="zlib-$MY_PKG_VERSION"
-ZLIB_TAR_URL="https://zlib.net/$ZLIB_SRC_DIR.tar.gz"
+ZLIB_TAR_URL="https://github.com/madler/zlib/releases/download/v${MY_PKG_VERSION}/zlib-${MY_PKG_VERSION}.tar.xz"
 
 # Check if file exists before downloading
-if [ ! -f "$ZLIB_SRC_DIR.tar.gz" ]; then
+if [ ! -f "$ZLIB_SRC_DIR.tar.xz" ]; then
   echo "Downloading zlib source from $ZLIB_TAR_URL..."
   curl -L -O "$ZLIB_TAR_URL" || { echo "Failed to download $ZLIB_TAR_URL"; exit 1; }
 fi
 
 # Extract the source if not already extracted
 if [ ! -d "$ZLIB_SRC_DIR" ]; then
-  tar -xzf "$ZLIB_SRC_DIR.tar.gz" || { echo "Failed to extract $ZLIB_SRC_DIR.tar.gz"; exit 1; }
+  tar -xJf "$ZLIB_SRC_DIR.tar.xz" || { echo "Failed to extract $ZLIB_SRC_DIR.tar.xz"; exit 1; }
 fi
 
 # Create the build directory
