@@ -40,9 +40,17 @@ LD="$TOOLCHAIN/bin/$ABI-ld"
 
 # Download zlib source (or use a local copy)
 ZLIB_SRC_DIR="zlib-$MY_PKG_VERSION"
+ZLIB_TAR_URL="https://zlib.net/$ZLIB_SRC_DIR.tar.gz"
+
+# Check if file exists before downloading
+if [ ! -f "$ZLIB_SRC_DIR.tar.gz" ]; then
+  echo "Downloading zlib source from $ZLIB_TAR_URL..."
+  curl -L -O "$ZLIB_TAR_URL" || { echo "Failed to download $ZLIB_TAR_URL"; exit 1; }
+fi
+
+# Extract the source if not already extracted
 if [ ! -d "$ZLIB_SRC_DIR" ]; then
-  curl -L -O https://zlib.net/$ZLIB_SRC_DIR.tar.gz
-  tar -xzf $ZLIB_SRC_DIR.tar.gz
+  tar -xzf "$ZLIB_SRC_DIR.tar.gz" || { echo "Failed to extract $ZLIB_SRC_DIR.tar.gz"; exit 1; }
 fi
 
 # Create the build directory
