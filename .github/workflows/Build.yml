@@ -1,0 +1,89 @@
+name: Build Android Packages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Comma-separated list of packages to build (e.g., libc++,zlib). Leave empty to build all.'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      API_LEVEL: 34
+      PREFIX: ${{ github.workspace }}/staging/usr/bionic
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Android NDK
+        run: |
+          wget https://dl.google.com/android/repository/android-ndk-r26d-linux.zip
+          unzip android-ndk-r26d-linux.zip
+          echo "NDK=${{ github.workspace }}/android-ndk-r26d" >> $GITHUB_ENV
+          echo "TOOLCHAIN=${{ github.workspace }}/android-ndk-r26d/toolchains/llvm/prebuilt/linux-x86_64" >> $GITHUB_ENV
+
+      - name: Install Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake clang ninja-build git pkg-config
+
+      - name: Create Directory Structure
+        run: |
+          mkdir -p $PREFIX/include
+          mkdir -p $PREFIX/lib
+
+      - name: Print Debug Info
+        run: |
+          echo "NDK: $NDK"
+          echo "TOOLCHAIN: $TOOLCHAIN"
+          echo "API_LEVEL: $API_LEVEL"
+          echo "PREFIX: $PREFIX"
+          ls -la $TOOLCHAIN/bin/
+
+      - name: Build Packages
+        run: |
+          export NDK="$NDK"
+          export TOOLCHAIN="$TOOLCHAIN"
+          export API_LEVEL="$API_LEVEL"
+          export MY_PKG_PREFIX="$PREFIX"
+
+          USER_PKGS="${{ github.event.inputs.packages }}"
+          
+          if [ -n "$USER_PKGS" ]; then
+            echo "Building user-specified packages: $USER_PKGS"
+            IFS=',' read -ra PKG_LIST <<< "$USER_PKGS"
+            for pkg in "${PKG_LIST[@]}"; do
+              script="packages/$pkg/build.sh"
+              if [ -f "$script" ]; then
+                echo "Building $pkg..."
+                bash "$script"
+              else
+                echo "Warning: build.sh for $pkg not found at $script"
+              fi
+            done
+          else
+            echo "No specific packages specified. Building all packages..."
+            for script in packages/*/build.sh; do
+              echo "Building $(dirname "$script")..."
+              bash "$script"
+            done
+          fi
+
+      - name: Package Artifact
+        run: |
+          cd $PREFIX
+          tar -czvf ${{ github.workspace }}/libraries.tar.gz .
+          ls -l ${{ github.workspace }}/libraries.tar.gz
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-libraries
+          path: libraries.tar.gz
