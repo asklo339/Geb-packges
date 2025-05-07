@@ -37,8 +37,8 @@ jobs:
       - name: Create Directory Structure
         run: |
           export PREFIX=/data/data/com.gebox.emu/files/usr/bionic
-          mkdir -p $PREFIX/include
-          mkdir -p $PREFIX/lib
+          sudo mkdir -p $PREFIX/include
+          sudo mkdir -p $PREFIX/lib
 
       - name: Print Debug Info
         run: |
