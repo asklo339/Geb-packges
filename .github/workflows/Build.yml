@@ -36,6 +36,7 @@ jobs:
 
       - name: Create Directory Structure
         run: |
+          export PREFIX=/data/data/com.gebox.emu/files/usr/bionic
           mkdir -p $PREFIX/include
           mkdir -p $PREFIX/lib
 
